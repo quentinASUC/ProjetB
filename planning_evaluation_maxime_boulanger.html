@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planning Évaluation — Maxime Sion · Boulanger</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F2F1EE;
+    --border: #E3E1DB;
+    --border2: #D0CEC7;
+    --text: #1C1B18;
+    --text2: #6B6860;
+    --text3: #9E9C96;
+    --accent: #1B4FD8;
+    --accent-light: #EBF0FD;
+    --warn: #C47B1A;
+    --warn-light: #FDF3E3;
+    --danger: #C0392B;
+    --danger-light: #FDECEA;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --radius: 8px;
+    --radius-sm: 5px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+  }
+  .header-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .score-pill {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .btn {
+    font-size: 12px;
+    font-family: var(--sans);
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #1640b8; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .stat-item {
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-val { font-size: 20px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* FILTERS */
+  .filter-bar {
+    padding: 12px 24px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .filter-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+  .filter-btn {
+    font-size: 11px;
+    font-family: var(--sans);
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  /* MAIN */
+  .main { padding: 20px 24px; max-width: 900px; margin: 0 auto; }
+
+  /* BLOC */
+  .bloc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: opacity 0.2s;
+  }
+  .bloc.done { opacity: 0.55; }
+  .bloc.hidden { display: none; }
+  .bloc.break-bloc { border-style: dashed; }
+
+  .bloc-header {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .bloc-header:hover { background: var(--surface2); }
+
+  .bloc-time {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .bloc-time-dur { font-size: 10px; color: var(--text3); font-weight: 400; margin-top: 2px; }
+
+  .bloc-info {}
+  .bloc-title-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .bloc-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .bloc-sub { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+
+  .bloc-controls { display: flex; align-items: center; gap: 8px; }
+  .check-btn {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: transparent;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .check-btn.checked { background: var(--green); border-color: var(--green); color: white; }
+  .chevron { font-size: 14px; color: var(--text3); transition: transform 0.2s; display: flex; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* BODY */
+  .bloc-body { display: none; border-top: 1px solid var(--border); }
+  .bloc-body.open { display: block; }
+
+  .body-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .body-section:last-child { border-bottom: none; }
+
+  .section-head {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Campagnes */
+  .camp-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .camp-row:last-child { border-bottom: none; }
+  .camp-name { font-size: 12px; font-weight: 500; flex: 1; color: var(--text); }
+  .camp-meta { font-size: 11px; color: var(--text2); white-space: nowrap; font-family: var(--mono); }
+  .tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+  .tag-red { background: var(--danger-light); color: var(--danger); }
+  .tag-orange { background: var(--warn-light); color: var(--warn); }
+  .tag-blue { background: var(--accent-light); color: var(--accent); }
+  .tag-green { background: var(--green-light); color: var(--green); }
+
+  /* Questions */
+  .q-list { display: flex; flex-direction: column; gap: 6px; }
+  .q-row { display: flex; gap: 8px; align-items: flex-start; }
+  .q-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 18px;
+    padding-top: 2px;
+    font-weight: 500;
+  }
+  .q-text { font-size: 12px; color: var(--text); line-height: 1.55; flex: 1; font-style: italic; }
+  .q-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--surface2); color: var(--text3); white-space: nowrap; margin-top: 2px; font-family: var(--mono); }
+
+  /* Signaux */
+  .signal-list { display: flex; flex-direction: column; gap: 6px; }
+  .signal-row { display: flex; gap: 8px; align-items: flex-start; }
+  .signal-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .signal-text { font-size: 12px; color: var(--text2); line-height: 1.5; flex: 1; }
+  .signal-text strong { font-weight: 600; color: var(--text); }
+
+  /* Objectif */
+  .obj-box {
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid;
+  }
+  .obj-eval { background: var(--accent-light); border-color: var(--accent); color: #0D3D6A; }
+  .obj-warn { background: var(--warn-light); border-color: var(--warn); color: #6B3D05; }
+  .obj-break { background: var(--green-light); border-color: var(--green); color: #1E4A09; }
+
+  /* Notes */
+  .notes-section { padding: 10px 16px; background: var(--surface2); }
+  .notes-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .notes-section textarea {
+    width: 100%;
+    font-size: 12px;
+    font-family: var(--sans);
+    resize: vertical;
+    min-height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    color: var(--text);
+    line-height: 1.5;
+    transition: border-color 0.1s;
+  }
+  .notes-section textarea:focus { outline: none; border-color: var(--accent); }
+
+  /* BOTTOM BAR */
+  .bottom-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* PROGRESS */
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  @media (max-width: 600px) {
+    .app-header { flex-wrap: wrap; }
+    .stats-bar { gap: 0; }
+    .stat-item { min-width: 80px; padding: 10px 12px; }
+    .main { padding: 12px; }
+    .bloc-header { grid-template-columns: 60px 1fr auto; gap: 8px; padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-left">
+    <div class="header-logo">SEA · Eval</div>
+    <div>
+      <div class="header-title">Évaluation Maxime Sion</div>
+      <div class="header-sub">Boulanger · 9h00 → 17h30 · Format copilote</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="score-pill" id="done-score">0 / 9 blocs</span>
+    <button class="btn btn-primary" onclick="exportNotes()">⬇ Exporter</button>
+    <button class="btn" onclick="resetAll()">↺ Reset</button>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-val">9</div><div class="stat-label">Blocs</div></div>
+  <div class="stat-item"><div class="stat-val">7h30</div><div class="stat-label">Durée</div></div>
+  <div class="stat-item"><div class="stat-val">6</div><div class="stat-label">Sous-comptes</div></div>
+  <div class="stat-item"><div class="stat-val" id="q-total">—</div><div class="stat-label">Questions</div></div>
+  <div class="stat-item">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="stat-val" id="pct-done">0%</div>
+    <div class="stat-label">Complété</div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Filtre</span>
+  <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
+  <button class="filter-btn" onclick="setFilter('Shopping',this)">Shopping</button>
+  <button class="filter-btn" onclick="setFilter('Search',this)">Search / IKC</button>
+  <button class="filter-btn" onclick="setFilter('PMax',this)">PMax</button>
+  <button class="filter-btn" onclick="setFilter('Tracking',this)">Tracking</button>
+  <button class="filter-btn" onclick="setFilter('Stratégie',this)">Stratégie</button>
+</div>
+
+<div class="main" id="main-container"></div>
+
+<div class="bottom-bar">
+  <button class="btn" onclick="exportNotes()">⬇ Exporter les notes</button>
+  <button class="btn" onclick="resetAll()">↺ Réinitialiser</button>
+</div>
+
+<script>
+const T = {
+  'Structure':  {bg:'#EEEDFE',c:'#534AB7'},
+  'Enchères':   {bg:'#FDF3E3',c:'#C47B1A'},
+  'Mots-clés':  {bg:'#EAF3DE',c:'#3B6D11'},
+  'Annonces':   {bg:'#EBF0FD',c:'#1B4FD8'},
+  'Shopping':   {bg:'#FAECE7',c:'#993C1D'},
+  'PMax':       {bg:'#FDECEA',c:'#7A1F10'},
+  'Audiences':  {bg:'#E1F5EE',c:'#0F6E56'},
+  'Tracking':   {bg:'#FBEAF0',c:'#993556'},
+  'Stratégie':  {bg:'#F1EFE8',c:'#5F5E5A'},
+  'Flux':       {bg:'#FFF4E0',c:'#8B5E04'},
+  'App':        {bg:'#F0ECF8',c:'#5C3D9B'},
+  'Demand Gen': {bg:'#FDF3E3',c:'#633806'},
+};
+const C = {
+  'IKC':      {bg:'#EEEDFE',c:'#534AB7'},
+  'Shopping': {bg:'#FAECE7',c:'#993C1D'},
+  'Text Ads': {bg:'#EBF0FD',c:'#1B4FD8'},
+  'Trade':    {bg:'#EAF3DE',c:'#3B6D11'},
+  'Magasins': {bg:'#F1EFE8',c:'#5F5E5A'},
+  'Global':   {bg:'#F5F5F5',c:'#555'},
+  '—':        {bg:'#EAF3DE',c:'#3B6D11'},
+};
+
+const blocs = [
+  {
+    id:'B0', time:'9h00', dur:'20 min', title:'Ouverture & cadrage',
+    compte:'Global', themes:['Stratégie'], tags:['Stratégie'], isBreak:false,
+    sub:'Vue d\'ensemble du compte · posture copilote',
+    camps:[],
+    qs:[
+      {q:"Comment tu décrirais le compte Boulanger à quelqu'un qui ne le connaît pas — quelle est la logique d'ensemble ?",d:'D8'},
+      {q:"C'est quoi les 2-3 sujets sur lesquels tu as le plus de visibilité, et ceux où tu te sens moins à l'aise ?",d:'D8'},
+      {q:"Avec l'ancienne agence, comment vous vous répartissiez les tâches — qui faisait quoi concrètement ?",d:'D8'},
+    ],
+    sigs:[
+      {col:'#C47B1A',txt:'La Q3 est la plus révélatrice : une liste de tâches déléguées à l\'ancienne agence calibre l\'amplitude réelle du gap.'},
+      {col:'#1B4FD8',txt:'Un sénior décrit le compte avec une logique business (univers produits, saisonnalité, mix canal), pas seulement technique.'},
+    ],
+    obj:{s:'obj-eval',t:'Observer si Maxime navigue par réflexe ou avec hésitation dans le MCC. Poser une baseline comportementale dès les 20 premières minutes.'},
+  },
+  {
+    id:'B1', time:'9h20', dur:'70 min', title:'Boulanger — IKC',
+    compte:'IKC', themes:['Structure','Enchères','Mots-clés'], tags:['Search'],
+    sub:'206 campagnes Search · 1,62M€ · Structure, enchères, SQR',
+    camps:[
+      {n:'[0670] - SN - IKC - LT - Maison > Aspiration',m:'167k€ · tROAS',a:[]},
+      {n:'[0410] - SN - IKC - LT - TV > Téléviseur',m:'75k€ · tROAS',a:[]},
+      {n:'[0740] - SN - IKC - LT - GEM > Réfrigérateur',m:'70k€ · tROAS',a:[]},
+      {n:'[0710] - SN - IKC - LT - GEM > Lave-linge',m:'53k€ · tROAS',a:[]},
+      {n:'[0620] - SN - IKC - LT - Cuisine > Machine à café',m:'51k€ · tROAS',a:[]},
+    ],
+    qs:[
+      {q:"Tu peux me montrer comment tu navigues dans IKC au quotidien — comment tu sais où regarder en premier ?",d:'D1'},
+      {q:"La nomenclature [0670] - SN - IKC - LT — tu peux me l'expliquer segment par segment ?",d:'D1'},
+      {q:"Sur la campagne Téléviseur à 75k€ en tROAS — comment tu es arrivé à cet objectif, tu pars de quoi ?",d:'D2'},
+      {q:"Tu peux me montrer ta dernière session de SQR sur une de ces campagnes — comment tu travailles concrètement dans l'interface ?",d:'D3'},
+      {q:"Tes listes de négatifs, elles sont organisées comment — partagées au niveau compte ou campagne par campagne ?",d:'D3'},
+      {q:"Si une de ces campagnes sort de son tROAS pendant 3 jours de suite, ton premier réflexe c'est quoi ?",d:'D2'},
+    ],
+    sigs:[
+      {col:'#1B4FD8',txt:'<strong>Faire faire le SQR en live</strong> sur Aspiration ou Téléviseur — observer la fluidité dans l\'interface, pas seulement la réponse.'},
+      {col:'#C47B1A',txt:'Un sénior décompose la nomenclature [0670]-SN-IKC-LT sans hésiter (code magasin, type, canal, durée de vie).'},
+      {col:'#534AB7',txt:'206 campagnes actives : demander comment il décide quelles campagnes méritent son attention en priorité ce jour-là.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D1 Structure, D2 Enchères, D3 Mots-clés. Le SQR en live est le premier signal fort de la journée.'},
+  },
+  {
+    id:'B2', time:'10h30', dur:'70 min', title:'Boulanger — Shopping',
+    compte:'Shopping', themes:['Shopping','Flux','Enchères'], tags:['Shopping'],
+    sub:'122 campagnes Shopping + 5 PMax · 14,3M€ · Architecture flux, GMC, segmentation',
+    camps:[
+      {n:'GS_Autre - CSS > Boost OP',m:'1,87M€ · tROAS',a:[{l:'CSS',c:'tag-blue'}]},
+      {n:'[0670] - GS_PAM - Maison > Entretien Sol',m:'1,16M€ · tROAS',a:[]},
+      {n:'[0740] - GS_GAM > Réfrigérateur',m:'964k€ · tROAS',a:[]},
+      {n:'GS_Autre - CSS > Flop marge',m:'647k€ · tROAS',a:[{l:'Custom label marge',c:'tag-blue'}]},
+      {n:'[0620] - GS_PAM - Cuisine > Petit déjeuner',m:'529k€ · tROAS',a:[]},
+    ],
+    qs:[
+      {q:"Sur ce compte Shopping, c'est quoi la logique entre GAM, PAM et les campagnes CSS ?",d:'D5'},
+      {q:"La campagne CSS > Boost OP à 1,87M€ — c'est quoi le CSS ici, comment ça fonctionne, qui gère l'accord ?",d:'D5'},
+      {q:"La campagne 'Flop marge' utilise un custom label — tu peux m'expliquer comment le flux est configuré pour alimenter ce label ?",d:'D5'},
+      {q:"Sur le GMC, tu as la main sur le flux ? Quand tu vois une désapprobation produit, ton process c'est quoi ?",d:'D5'},
+      {q:"Tu descends jusqu'à l'ID produit dans ta segmentation — sur quelles campagnes et pourquoi ?",d:'D5'},
+      {q:"Les tROAS sur les campagnes à 700k-1M€, ils sont fixés comment — tu les touches souvent ?",d:'D2'},
+    ],
+    sigs:[
+      {col:'#993C1D',txt:'<strong>59% du spend total est ici</strong> — c\'est le cœur. La maîtrise des custom labels, de la segmentation et du GMC se voit sur ce compte.'},
+      {col:'#C47B1A',txt:'Demander d\'ouvrir une campagne Shopping et montrer la structure des product groups en live — segmentation ou tout en "Tous les produits" ?'},
+      {col:'#1B4FD8',txt:'La distinction GAM / PAM / CSS n\'est pas évidente pour tous. Un sénior explique la logique de priorité et les query funnels associés.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D5 Shopping/PMax/Flux, D2 Enchères. Bloc à poids le plus fort de la journée — 14M€ de spend.'},
+  },
+  {
+    id:'B3', time:'11h40', dur:'50 min', title:'Boulanger — Text Ads + App',
+    compte:'Text Ads', themes:['Annonces','Mots-clés','App'], tags:['Search'],
+    sub:'146 campagnes Search + 1 App · 6,55M€ · DSA, RSA, App Android',
+    camps:[
+      {n:'DSA - Tous produits',m:'1,65M€ · tROAS · DSA',a:[]},
+      {n:'[0710] - DSA - GAM - Lave-linge',m:'335k€ · tROAS',a:[]},
+      {n:'[0710] - TXT - GEN - GAM - Lave linge',m:'267k€ · tROAS · Search générique',a:[]},
+      {n:'App-Android',m:'274k€ · CPA cible',a:[{l:'274k€ sans conv value',c:'tag-red'}]},
+    ],
+    qs:[
+      {q:"La DSA 'Tous produits' à 1,65M€ — comment elle est configurée, quelles cibles de pages et quelles exclusions ?",d:'D3'},
+      {q:"Tu as des DSA et des Search génériques sur les mêmes catégories — comment tu gères la cannibalisation ?",d:'D3'},
+      {q:"Tu peux m'ouvrir une RSA sur une des campagnes Text et me dire comment tu juges sa qualité ?",d:'D4'},
+      {q:"La campagne App-Android à 274k€ — c'est quoi l'objectif, comment le tracking est configuré ?",d:'D7'},
+      {q:"Les 0 conversions value sur App, c'est normal pour ce type de campagne ou c'est un angle mort ?",d:'D7'},
+    ],
+    sigs:[
+      {col:'#C0392B',txt:'<strong>App-Android : 274k€, 0 valeur de conversion</strong> — soit tracking app en actions non monétaires (installs), soit angle mort. Observer comment Maxime diagnostique.'},
+      {col:'#C47B1A',txt:'La coexistence DSA + Search générique sur les mêmes catégories est un vrai sujet. Un sénior sait précisément quelles requêtes chaque type capte.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D3 Mots-clés/DSA, D4 Annonces/RSA, D7 Tracking (premier signal App).'},
+  },
+  {
+    id:'B4', time:'12h30', dur:'30 min', title:'Pause déjeuner',
+    compte:'—', themes:[], tags:['all'], isBreak:true,
+    sub:'12h30 → 13h00 — Coupure',
+    camps:[], qs:[],
+    sigs:[
+      {col:'#3B6D11',txt:'Profite de cette pause pour remplir les premières notations sur le radar (D1, D2, D3, D4). Les premières impressions sont souvent les plus justes.'},
+    ],
+    obj:{s:'obj-break',t:'Prends 10 min avant de reprendre pour noter 2-3 signaux comportementaux du matin : cherche-t-il à impressionner, ou explique-t-il avec naturel ?'},
+  },
+  {
+    id:'B5', time:'13h00', dur:'65 min', title:'Boulanger — Trade & PMax',
+    compte:'Trade', themes:['PMax','Enchères'], tags:['PMax','Shopping'],
+    sub:'16 campagnes comarketing + PMax · Thèmes : PMax, comarketing, Max Clics',
+    camps:[
+      {n:'165 - Comarketing - GOOGLE LANCEMENT P10A',m:'45k€ · Max valeur · PMax',a:[]},
+      {n:'220 - Comarketing - SAMSUNG S26 LANCEMENT',m:'20k€ · tROAS · Shopping',a:[]},
+      {n:'838 - BEATS Plan Promo Casques Mai',m:'10k€ · Max Clics',a:[{l:'Max Clics',c:'tag-orange'}]},
+      {n:'500 - ECOVACS lancement X12 Omni',m:'9k€ · Max Clics',a:[{l:'Max Clics',c:'tag-orange'}]},
+    ],
+    qs:[
+      {q:"Sur la PMax GOOGLE P10A à 45k€ — comment tu la paramètres, tu as des asset groups séparés par thématique ?",d:'D5'},
+      {q:"Pour les campagnes comarketing, qui décide de la stratégie d'enchères — toi ou le partenaire trade ?",d:'D5'},
+      {q:"Les campagnes BEATS et ECOVACS sont en 'Maximiser les clics' — c'est une demande du trade ou un choix de ta part ?",d:'D2'},
+      {q:"Sur les PMax, quels rapports tu regardes pour savoir ce qui performe — tu vas où concrètement ?",d:'D5'},
+      {q:"Est-ce que tu as configuré l'exclusion de marques sur les PMax ? Et l'objectif d'acquisition de nouveaux clients ?",d:'D5'},
+      {q:"Comment tu gères la cannibalisation entre une PMax et une campagne Shopping Standard sur les mêmes produits ?",d:'D5'},
+    ],
+    sigs:[
+      {col:'#C0392B',txt:'<strong>Max Clics sur BEATS et ECOVACS</strong> — soit une contrainte partenaire, soit un défaut. La réponse de Maxime est déterminante.'},
+      {col:'#C47B1A',txt:'La question sur les insights PMax est un filtre direct : un sénior va dans les search themes, asset reports et audience insights — pas seulement le ROAS global.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D5 PMax (profondeur), D2 Enchères (justification Max Clics). C\'est ici que le gap PMax se mesure le mieux.'},
+  },
+  {
+    id:'B6', time:'14h05', dur:'60 min', title:'Tracking, Consent Mode & mesure',
+    compte:'Global', themes:['Tracking'], tags:['Tracking'],
+    sub:'Thème transversal — interface tracking Google Ads + Tag Assistant',
+    camps:[
+      {n:'App-Android — reprise diagnostic',m:'274k€ · tracking à explorer',a:[{l:'Diagnostic live',c:'tag-blue'}]},
+      {n:'Suivi des conversions — vue compte',m:'Actions de conversion configurées',a:[]},
+      {n:'Consent Mode — Tag Assistant',m:'Vérification sur Boulanger.fr',a:[]},
+    ],
+    qs:[
+      {q:"Comment le tracking conversions est implémenté — balise native, import GA4, GTM ? C'est toi qui as mis ça en place ?",d:'D7'},
+      {q:"Tu peux m'ouvrir l'écran de suivi des conversions et m'expliquer chaque action configurée ?",d:'D7'},
+      {q:"Si tu vois une chute de -40% des conversions du jour au lendemain, tu vérifies quoi en premier ?",d:'D7'},
+      {q:"Le Consent Mode v2, il est implémenté sur Boulanger.fr ? Tu sais comment vérifier ça ?",d:'D7'},
+      {q:"Les conversions améliorées — est-ce qu'elles sont configurées ici, et pourquoi c'est important ?",d:'D7'},
+      {q:"Tu utilises quel modèle d'attribution sur le compte — data-driven ou autre ? Pourquoi ce choix ?",d:'D7'},
+    ],
+    sigs:[
+      {col:'#C0392B',txt:'<strong>Faire le diagnostic App-Android en live</strong> : observer l\'ordre de recherche (tracking → GA4 → objectifs → reporting). La méthode révèle plus que la réponse.'},
+      {col:'#C47B1A',txt:'Consent Mode v2 et conversions améliorées sont dans le contrat. Un gap ici est actionnable dès la semaine 1.'},
+      {col:'#1B4FD8',txt:'Demander d\'ouvrir Tag Assistant sur Boulanger.fr — voir si Maxime sait l\'utiliser et ce qu\'il y lit.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D7 Tracking complet, D9 Tracking avancé. Bloc le plus technique de l\'après-midi.'},
+  },
+  {
+    id:'B7', time:'15h05', dur:'55 min', title:'Magasins, Lokeo & YouTube',
+    compte:'Magasins', themes:['Structure','Demand Gen','Audiences'], tags:['PMax','Stratégie'],
+    sub:'170 campagnes locales + 11 Lokeo + 5 YouTube/DG · Local, audiences, Demand Gen',
+    camps:[
+      {n:'Pmax Locale F204 — Nantes Rezé',m:'5,5k€ · Max Conv · PMax locale',a:[]},
+      {n:'F217 - Magasin local — CAEN',m:'2,6k€ · Max Conv · Search',a:[]},
+      {n:'Portet / Chantepie / Passy',m:'0€ · CPC Manuel actif',a:[{l:'CPC Manuel',c:'tag-orange'}]},
+      {n:'Lokeo — MM Ordinateur portable',m:'39k€ · Max valeur',a:[]},
+      {n:'MOB - Air Fryer - Vidéo Longue - DG',m:'950€ · Demand Gen',a:[]},
+    ],
+    qs:[
+      {q:"Les campagnes Magasins, c'est toi qui les gères ou c'est organisé différemment — quelle est la logique de ce sous-compte ?",d:'D1'},
+      {q:"Il y a des campagnes à 0€ de dépense encore en CPC manuel sur des magasins — tu sais pourquoi elles sont encore actives ?",d:'D2'},
+      {q:"Lokeo c'est quoi comme activité — comment tu articules la stratégie Lokeo vs Boulanger principal ?",d:'D8'},
+      {q:"Sur les campagnes YouTube / Demand Gen Air Fryer, comment tu mesures la performance — tu regardes quoi ?",d:'D13'},
+      {q:"Tu utilises des audiences sur les campagnes Search Magasins — observation ou ciblage ?",d:'D6'},
+    ],
+    sigs:[
+      {col:'#C47B1A',txt:'<strong>CPC manuel sur campagnes Magasins à 0€</strong> — campagnes probablement oubliées, pas archivées. Test de rigueur sur la dette technique.'},
+      {col:'#1B4FD8',txt:'Lokeo SAS est un sous-compte distinct (offre location). Vérifier si Maxime comprend la différence et adapte la stratégie.'},
+      {col:'#0F6E56',txt:'Demand Gen est récent — la question sur la mesure de performance est un test de veille produit simple.'},
+    ],
+    obj:{s:'obj-eval',t:'Évalue D1 Structure (multi-entités), D2 Enchères (CPC manuel), D6 Audiences, D13 Demand Gen.'},
+  },
+  {
+    id:'B8', time:'16h00', dur:'90 min', title:'Clôture stratégique',
+    compte:'Global', themes:['Stratégie'], tags:['Stratégie'],
+    sub:'Vision transversale · priorisation · posture sénior · base du plan de progression',
+    camps:[
+      {n:'Vue MCC globale — Auction Insights',m:'Analyse concurrentielle',a:[]},
+      {n:'Rapport de recommandations Google Ads',m:'Score d\'optimisation compte',a:[]},
+    ],
+    qs:[
+      {q:"On a passé la journée ensemble — si tu devais prioriser 5 chantiers dans les 30 prochains jours, ce serait quoi et dans quel ordre ?",d:'D8'},
+      {q:"Tu peux m'ouvrir l'Auction Insights sur une des catégories principales — qu'est-ce que tu lis là-dedans ?",d:'D8'},
+      {q:"Là on a vu des choses ensemble — qu'est-ce qui t'a surpris ou que tu ne savais pas ?",d:'D8'},
+      {q:"Comment tu fais ta veille SEA — tu as des sources que tu suis régulièrement ?",d:'D8'},
+      {q:"Microsoft Ads est dans le scope — comment tu le pilotes, c'est un import Google Ads ou tu l'optimises indépendamment ?",d:'D8'},
+      {q:"Piano Analytics, tu connais — tu t'en sers comment pour analyser la performance SEA ?",d:'D10'},
+      {q:"Pour le reporting mensuel Boulanger, comment tu construis ta présentation — tu pars de quoi ?",d:'D14'},
+    ],
+    sigs:[
+      {col:'#C0392B',txt:'<strong>La priorisation des 5 chantiers</strong> est le test de maturité stratégique final. Un sénior priorise par impact business estimé, pas par facilité d\'exécution.'},
+      {col:'#C47B1A',txt:'La Q3 ("qu\'est-ce qui t\'a surpris") évalue la capacité d\'auto-diagnostic — indispensable pour que le plan de progression soit accepté.'},
+      {col:'#1B4FD8',txt:'"J\'importe depuis Google Ads" sans optimisation spécifique sur Microsoft Ads = signal de sous-exploitation systématique.'},
+    ],
+    obj:{s:'obj-warn',t:'Formuler avec Maxime les 3 axes prioritaires identifiés dans la journée comme une "roadmap commune" — pas un verdict.'},
+  },
+];
+
+let activeFilter = 'all';
+const done = new Set();
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function renderAll() {
+  const container = document.getElementById('main-container');
+  container.innerHTML = '';
+  let qTotal = 0;
+
+  blocs.forEach((b, bi) => {
+    const vis = activeFilter === 'all' || b.tags.includes(activeFilter);
+    qTotal += b.qs.length;
+
+    const el = document.createElement('div');
+    el.className = 'bloc' + (done.has(bi) ? ' done' : '') + (b.isBreak ? ' break-bloc' : '') + (vis ? '' : ' hidden');
+    el.id = `b-${bi}`;
+
+    const cm = C[b.compte] || C['Global'];
+    const thBadges = b.themes.map(t => {
+      const m = T[t]||{bg:'#eee',c:'#333'};
+      return `<span class="badge" style="background:${m.bg};color:${m.c}">${t}</span>`;
+    }).join('');
+
+    const hdr = document.createElement('div');
+    hdr.className = 'bloc-header';
+    hdr.innerHTML = `
+      <div class="bloc-time">${b.time}<div class="bloc-time-dur">${b.dur}</div></div>
+      <div class="bloc-info">
+        <div class="bloc-title-row">
+          <span class="bloc-title">${b.title}</span>
+          <span class="badge" style="background:${cm.bg};color:${cm.c}">${b.compte}</span>
+          ${thBadges}
+        </div>
+        <div class="bloc-sub">${b.sub}</div>
+      </div>
+      <div class="bloc-controls">
+        <button class="check-btn ${done.has(bi)?'checked':''}" id="chk-${bi}" onclick="event.stopPropagation();toggleDone(${bi})" title="Marquer complété">${done.has(bi)?'✓':''}</button>
+        <div class="chevron" id="chv-${bi}">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    `;
+    hdr.addEventListener('click', () => toggleBody(bi));
+
+    const body = document.createElement('div');
+    body.className = 'bloc-body';
+    body.id = `bd-${bi}`;
+
+    if (b.camps.length) {
+      const s = document.createElement('div');
+      s.className = 'body-section';
+      s.innerHTML = `<div class="section-head">🎯 Campagnes à analyser en live</div>`;
+      b.camps.forEach(c => {
+        const r = document.createElement('div');
+        r.className = 'camp-row';
+        r.innerHTML = `<span class="camp-name">${c.n}</span><span class="camp-meta">${c.m}</span>${c.a.map(a=>`<span class="tag ${a.c}">${a.l}</span>`).join('')}`;
+        s.appendChild(r);
+      });
+      body.appendChild(s);
+    }
+
+    if (b.qs.length) {
+      const s = document.createElement('div');
+      s.className = 'body-section';
+      s.innerHTML = `<div class="section-head">💬 Questions copilote</div><div class="q-list"></div>`;
+      const ql = s.querySelector('.q-list');
+      b.qs.forEach((q,i) => {
+        const r = document.createElement('div');
+        r.className = 'q-row';
+        r.innerHTML = `<span class="q-num">${String(i+1).padStart(2,'0')}</span><span class="q-text">${q.q}</span>${q.d?`<span class="q-tag">${q.d}</span>`:''}`;
+        ql.appendChild(r);
+      });
+      body.appendChild(s);
+    }
+
+    if (b.sigs.length) {
+      const s = document.createElement('div');
+      s.className = 'body-section';
+      s.innerHTML = `<div class="section-head">⚡ Signaux & ce que ça révèle</div><div class="signal-list"></div>`;
+      const sl = s.querySelector('.signal-list');
+      b.sigs.forEach(sig => {
+        const r = document.createElement('div');
+        r.className = 'signal-row';
+        r.innerHTML = `<div class="signal-dot" style="background:${sig.col}"></div><span class="signal-text">${sig.txt}</span>`;
+        sl.appendChild(r);
+      });
+      body.appendChild(s);
+    }
+
+    if (b.obj) {
+      const s = document.createElement('div');
+      s.className = 'body-section';
+      s.innerHTML = `<div class="obj-box ${b.obj.s}">${b.obj.t}</div>`;
+      body.appendChild(s);
+    }
+
+    const ns = document.createElement('div');
+    ns.className = 'notes-section';
+    ns.innerHTML = `<div class="notes-label">Notes — ${b.title}</div><textarea id="nt-${bi}" placeholder="Observations sur ce bloc…"></textarea>`;
+    body.appendChild(ns);
+
+    el.appendChild(hdr);
+    el.appendChild(body);
+    container.appendChild(el);
+  });
+
+  document.getElementById('q-total').textContent = qTotal;
+}
+
+function toggleBody(bi) {
+  const bd = document.getElementById(`bd-${bi}`);
+  const cv = document.getElementById(`chv-${bi}`);
+  if (!bd) return;
+  const open = bd.classList.contains('open');
+  bd.classList.toggle('open', !open);
+  cv?.classList.toggle('open', !open);
+}
+
+function toggleDone(bi) {
+  done.has(bi) ? done.delete(bi) : done.add(bi);
+  const n = done.size;
+  document.getElementById('done-score').textContent = `${n} / ${blocs.length} blocs`;
+  document.getElementById('pct-done').textContent = Math.round(n/blocs.length*100) + '%';
+  document.getElementById('progress-fill').style.width = (n/blocs.length*100) + '%';
+  const chk = document.getElementById(`chk-${bi}`);
+  if (chk) { chk.classList.toggle('checked', done.has(bi)); chk.textContent = done.has(bi) ? '✓' : ''; }
+  document.getElementById(`b-${bi}`)?.classList.toggle('done', done.has(bi));
+}
+
+function exportNotes() {
+  const lines = [
+    'PLANNING JOURNÉE — ÉVALUATION MAXIME SION',
+    `Date : ${new Date().toLocaleDateString('fr-FR')}`,
+    'Compte : Boulanger', ''
+  ];
+  blocs.forEach((b, bi) => {
+    lines.push(`\n${'═'.repeat(60)}`);
+    lines.push(`[${b.id}] ${b.time} (${b.dur}) — ${b.title}`);
+    if (b.camps.length) { lines.push('\nCAMPAGNES :'); b.camps.forEach(c => lines.push(`  · ${c.n} — ${c.m}`)); }
+    if (b.qs.length) { lines.push('\nQUESTIONS :'); b.qs.forEach((q,i) => lines.push(`  ${i+1}. ${q.q}`)); }
+    const note = document.getElementById(`nt-${bi}`)?.value;
+    if (note) lines.push(`\nNOTES :\n${note}`);
+    if (done.has(bi)) lines.push('\n[✓ COMPLÉTÉ]');
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'}));
+  a.download = `planning_evaluation_maxime_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+function resetAll() {
+  done.clear();
+  document.getElementById('done-score').textContent = `0 / ${blocs.length} blocs`;
+  document.getElementById('pct-done').textContent = '0%';
+  document.getElementById('progress-fill').style.width = '0%';
+  renderAll();
+}
+
+renderAll();
+</script>
+</body>
+</html>
